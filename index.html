@@ -1,0 +1,577 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>대한민국 연봉 랭킹 계산기</title>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;700;900&family=Bebas+Neue&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#0d0d0f;--surface:#17171c;--surface2:#1f1f27;
+  --border:rgba(255,255,255,0.08);--border2:rgba(255,255,255,0.15);
+  --accent:#c8f135;--blue:#378ADD;--orange:#f1a035;--pink:#D4537E;
+  --text:#f0efe8;--muted:#555550;--muted2:#999990;
+}
+body{background:var(--bg);color:var(--text);font-family:'Noto Sans KR',sans-serif;min-height:100vh}
+.wrap{max-width:680px;margin:0 auto;padding:48px 24px 80px}
+
+/* 헤더 */
+.hero{text-align:center;margin-bottom:44px}
+.eyebrow{font-size:11px;letter-spacing:.2em;color:var(--muted2);text-transform:uppercase;margin-bottom:12px}
+.hero-title{font-family:'Bebas Neue',sans-serif;font-size:clamp(48px,12vw,80px);line-height:.9;letter-spacing:.02em;margin-bottom:12px;color:var(--text)}
+.hero-title span{color:var(--accent)}
+.hero-sub{font-size:13px;color:var(--muted2);line-height:1.7}
+
+/* 카드 */
+.card{background:var(--surface);border:1px solid var(--border);border-radius:20px;padding:26px;margin-bottom:14px}
+.sec-label{font-size:11px;letter-spacing:.12em;text-transform:uppercase;color:var(--muted2);margin-bottom:12px;display:block}
+
+/* 입력 */
+.salary-wrap{display:flex;align-items:center;gap:10px;background:var(--surface2);border:1px solid var(--border);border-radius:12px;padding:4px 4px 4px 18px;transition:border-color .2s;margin-bottom:12px}
+.salary-wrap:focus-within{border-color:var(--accent)}
+.salary-wrap input{background:none;border:none;outline:none;font-family:'Bebas Neue',sans-serif;font-size:34px;color:var(--text);width:100%;letter-spacing:.04em}
+.salary-wrap input::placeholder{color:#252530}
+.unit{font-size:13px;color:var(--muted2);padding-right:8px;white-space:nowrap}
+input[type=range]{-webkit-appearance:none;width:100%;height:4px;background:var(--surface2);border-radius:2px;outline:none;margin-bottom:6px}
+input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:18px;height:18px;background:var(--accent);border-radius:50%;cursor:pointer;transition:transform .15s}
+input[type=range]::-webkit-slider-thumb:hover{transform:scale(1.2)}
+.slider-hints{display:flex;justify-content:space-between;font-size:10px;color:#333;margin-bottom:18px}
+
+.filter-grid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;margin-bottom:20px}
+.filter-block label{display:block;font-size:11px;color:var(--muted2);letter-spacing:.05em;margin-bottom:6px}
+.filter-block select{width:100%;background:var(--surface2);border:1px solid var(--border);border-radius:10px;color:var(--text);font-family:'Noto Sans KR',sans-serif;font-size:13px;padding:9px 12px;outline:none;appearance:none;cursor:pointer;transition:border-color .2s}
+.filter-block select:focus{border-color:var(--accent)}
+.calc-btn{width:100%;padding:16px;background:var(--accent);color:#0d0d0f;border:none;border-radius:12px;font-family:'Noto Sans KR',sans-serif;font-size:14px;font-weight:700;cursor:pointer;letter-spacing:.04em;transition:transform .15s,opacity .15s}
+.calc-btn:hover{transform:translateY(-2px);opacity:.9}
+
+/* 결과 전체 */
+#result{display:none;animation:fadeUp .45s cubic-bezier(.16,1,.3,1)}
+@keyframes fadeUp{from{opacity:0;transform:translateY(28px)}to{opacity:1;transform:translateY(0)}}
+
+/* 메인 랭크 */
+.rank-card{text-align:center;padding:36px 28px;position:relative;overflow:hidden}
+.rank-card::before{content:'';position:absolute;top:-60px;left:50%;transform:translateX(-50%);width:300px;height:300px;background:radial-gradient(circle,rgba(200,241,53,.07) 0%,transparent 70%);pointer-events:none}
+.scope-row{display:flex;gap:6px;margin-bottom:14px;flex-wrap:wrap;justify-content:center}
+.scope-chip{font-size:11px;padding:3px 10px;border-radius:100px;background:rgba(255,255,255,.05);color:var(--muted2);border:1px solid var(--border)}
+.rank-num{font-family:'Bebas Neue',sans-serif;font-size:clamp(64px,16vw,96px);line-height:.88;letter-spacing:.02em;margin-bottom:8px}
+.rank-desc{font-size:14px;color:var(--muted2);line-height:1.7}
+.rank-desc strong{color:var(--text)}
+.tier-pill{display:inline-block;font-size:12px;font-weight:700;padding:5px 16px;border-radius:100px;margin-top:14px;letter-spacing:.06em}
+
+/* 캐릭터 반응 카드 */
+.char-card{display:flex;gap:16px;align-items:flex-start}
+.char-face{font-size:56px;line-height:1;flex-shrink:0;animation:bounce .6s ease}
+@keyframes bounce{0%,100%{transform:translateY(0)}40%{transform:translateY(-8px)}70%{transform:translateY(-3px)}}
+.char-bubble{flex:1}
+.char-name{font-size:11px;color:var(--muted2);letter-spacing:.08em;text-transform:uppercase;margin-bottom:6px}
+.char-line{font-size:15px;color:var(--text);line-height:1.7;font-weight:500}
+.char-sub{font-size:13px;color:var(--muted2);margin-top:6px;line-height:1.6}
+
+/* 100명 시각화 */
+.crowd-subtitle{font-size:13px;color:var(--muted2);margin-bottom:14px}
+.crowd-subtitle strong{color:var(--accent)}
+.crowd-grid{display:grid;grid-template-columns:repeat(20,1fr);gap:3px;margin-bottom:12px}
+.person{width:100%;aspect-ratio:1;border-radius:2px}
+.person.higher{background:var(--surface2)}
+.person.me{background:var(--accent);border-radius:4px;transform:scale(1.2);position:relative}
+.person.lower{background:var(--blue)}
+.crowd-legend{display:flex;gap:16px;font-size:11px;color:var(--muted2)}
+.ldot{width:10px;height:10px;border-radius:2px;display:inline-block;margin-right:4px;vertical-align:middle}
+
+/* RPG */
+.rpg-header{display:flex;justify-content:space-between;align-items:baseline;margin-bottom:4px}
+.rpg-cur{font-size:15px;color:var(--text);font-weight:700}
+.rpg-next-txt{font-size:12px;color:var(--muted2)}
+.xp-track{width:100%;height:14px;background:var(--surface2);border-radius:7px;overflow:hidden;margin:10px 0 8px;border:1px solid var(--border)}
+.xp-fill{height:100%;border-radius:7px;width:0;transition:width 1.1s cubic-bezier(.16,1,.3,1);position:relative}
+.rpg-labels{display:flex;justify-content:space-between;font-size:11px;color:var(--muted);margin-bottom:10px}
+.rpg-msg{font-size:13px;color:var(--muted2);line-height:1.65;padding:10px 14px;background:var(--surface2);border-radius:10px;border:1px solid var(--border)}
+
+/* 자동차 추천 */
+.car-card{display:flex;gap:16px;align-items:center}
+.car-emoji{font-size:52px;flex-shrink:0}
+.car-info{}
+.car-name{font-size:17px;font-weight:700;color:var(--text);margin-bottom:4px}
+.car-price{font-size:13px;color:var(--muted2);margin-bottom:6px}
+.car-reason{font-size:13px;color:var(--muted2);line-height:1.6}
+.car-badge{display:inline-block;font-size:11px;padding:2px 8px;border-radius:100px;border:1px solid var(--border);color:var(--muted2);margin-right:4px;margin-top:4px}
+
+/* 기준별 4칸 */
+.four-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:14px}
+.mini{background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:16px}
+.mini-lbl{font-size:11px;color:var(--muted2);margin-bottom:5px}
+.mini-pct{font-family:'Bebas Neue',sans-serif;font-size:26px;letter-spacing:.03em;margin-bottom:2px}
+.mini-sub{font-size:11px;color:var(--muted)}
+
+/* 바 차트 */
+.bar-row{display:flex;align-items:center;gap:10px;margin-bottom:9px}
+.bar-lbl{font-size:12px;color:var(--muted2);width:64px;text-align:right;flex-shrink:0}
+.bar-track{flex:1;height:6px;background:var(--surface2);border-radius:3px;overflow:hidden}
+.bar-fill{height:100%;border-radius:3px;width:0;transition:width .8s cubic-bezier(.16,1,.3,1)}
+.bar-fill.ref{background:rgba(255,255,255,.1)}
+.bar-fill.me{background:var(--blue)}
+.bar-amt{font-size:12px;width:72px;flex-shrink:0;text-align:right}
+
+/* 비교 테이블 */
+.cmp-row{display:flex;justify-content:space-between;align-items:center;padding:9px 0;border-bottom:1px solid var(--border);font-size:13px}
+.cmp-row:last-child{border-bottom:none}
+.ck{color:var(--muted2)}.cv{font-weight:700}
+.up{color:#5DCAA5}.dn{color:#F0997B}.eq{color:var(--muted2)}
+
+.reset-btn{width:100%;padding:14px;background:transparent;color:var(--muted2);border:1px solid var(--border);border-radius:12px;font-family:'Noto Sans KR',sans-serif;font-size:14px;cursor:pointer;margin-top:4px;transition:border-color .2s,color .2s}
+.reset-btn:hover{border-color:var(--muted2);color:var(--text)}
+.source{text-align:center;font-size:11px;color:#2e2e2e;margin-top:24px;line-height:1.9}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <div class="hero">
+    <div class="eyebrow">대한민국 근로자 연봉 랭킹</div>
+    <div class="hero-title">내 연봉<br><span>순위는?</span></div>
+    <div class="hero-sub">성별 · 나이 · 지역 기준 백분위 계산<br>조건을 전체로 두면 전국 전체 근로자 기준</div>
+  </div>
+
+  <!-- 입력 -->
+  <div class="card" id="input-section">
+    <span class="sec-label">연봉 입력 (세전)</span>
+    <div class="salary-wrap">
+      <input type="number" id="sal" placeholder="4500" min="0" max="200000" step="100">
+      <span class="unit">만원</span>
+    </div>
+    <input type="range" id="slider" min="1000" max="20000" step="100" value="4500">
+    <div class="slider-hints"><span>1,000만</span><span>5,000만</span><span>1억</span><span>1.5억</span><span>2억</span></div>
+    <div class="filter-grid">
+      <div class="filter-block">
+        <label>성별</label>
+        <select id="g">
+          <option value="all">전체 (무관)</option>
+          <option value="male">남성</option>
+          <option value="female">여성</option>
+        </select>
+      </div>
+      <div class="filter-block">
+        <label>나이대</label>
+        <select id="a">
+          <option value="all">전체 (무관)</option>
+          <option value="20">20대</option>
+          <option value="30">30대</option>
+          <option value="40">40대</option>
+          <option value="50">50대</option>
+          <option value="60">60대 이상</option>
+        </select>
+      </div>
+      <div class="filter-block">
+        <label>지역</label>
+        <select id="r">
+          <option value="all">전체 (무관)</option>
+          <option value="수도권">수도권</option>
+          <option value="부산경남">부산·경남</option>
+          <option value="대구경북">대구·경북</option>
+          <option value="광주전라">광주·전라</option>
+          <option value="대전충청">대전·충청</option>
+          <option value="강원제주">강원·제주</option>
+        </select>
+      </div>
+    </div>
+    <button class="calc-btn" onclick="calc()">내 연봉 순위 확인하기</button>
+  </div>
+
+  <!-- 결과 -->
+  <div id="result">
+
+    <!-- 1. 메인 랭크 -->
+    <div class="card rank-card">
+      <div class="scope-row" id="scope-row"></div>
+      <div class="rank-num" id="main-pct"></div>
+      <div class="rank-desc" id="main-desc"></div>
+      <span class="tier-pill" id="tier-pill"></span>
+    </div>
+
+    <!-- 2. 캐릭터 반응 -->
+    <div class="card char-card" id="char-card">
+      <div class="char-face" id="char-face"></div>
+      <div class="char-bubble">
+        <div class="char-name" id="char-name"></div>
+        <div class="char-line" id="char-line"></div>
+        <div class="char-sub" id="char-sub"></div>
+      </div>
+    </div>
+
+    <!-- 3. 100명 중 시각화 -->
+    <div class="card">
+      <span class="sec-label">100명이 줄 서면 내 위치</span>
+      <div class="crowd-subtitle" id="crowd-sub"></div>
+      <div class="crowd-grid" id="crowd-grid"></div>
+      <div class="crowd-legend">
+        <span><span class="ldot" style="background:var(--blue)"></span>나보다 낮음</span>
+        <span><span class="ldot" style="background:var(--accent);border-radius:3px"></span>나 ★</span>
+        <span><span class="ldot" style="background:var(--surface2);border:1px solid #333"></span>나보다 높음</span>
+      </div>
+    </div>
+
+    <!-- 4. RPG 레벨업 -->
+    <div class="card">
+      <span class="sec-label">연봉 레벨업 현황</span>
+      <div class="rpg-header">
+        <div class="rpg-cur" id="rpg-cur"></div>
+        <div class="rpg-next-txt" id="rpg-next"></div>
+      </div>
+      <div class="xp-track"><div class="xp-fill" id="xp-fill"></div></div>
+      <div class="rpg-labels"><span id="rpg-l1"></span><span id="rpg-l2"></span></div>
+      <div class="rpg-msg" id="rpg-msg"></div>
+    </div>
+
+    <!-- 5. 자동차 추천 -->
+    <div class="card">
+      <span class="sec-label">이 연봉이라면 타야 할 차</span>
+      <div class="car-card">
+        <div class="car-emoji" id="car-emoji"></div>
+        <div class="car-info">
+          <div class="car-name" id="car-name"></div>
+          <div class="car-price" id="car-price"></div>
+          <div id="car-badges"></div>
+          <div class="car-reason" id="car-reason"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 6. 기준별 상세 순위 -->
+    <span class="sec-label">기준별 상세 순위</span>
+    <div class="four-grid" id="four-grid"></div>
+
+    <!-- 7. 바 차트 -->
+    <div class="card">
+      <span class="sec-label" id="chart-title" style="margin-bottom:14px">분위별 기준선</span>
+      <div id="bar-chart"></div>
+    </div>
+
+    <!-- 8. 비교 테이블 -->
+    <div class="card">
+      <span class="sec-label">중위 기준 비교 <span style="font-size:10px;color:var(--muted);font-weight:400;letter-spacing:0;text-transform:none">※ 평균보다 현실적인 정중앙 값</span></span>
+      <div id="cmp-table"></div>
+    </div>
+
+    <button class="reset-btn" onclick="resetForm()">← 다시 계산하기</button>
+    <div class="source">
+      출처: 국세청 근로소득 통계(2023), 통계청 임금근로일자리 소득(2022), 고용노동부 고용형태별 근로실태조사<br>
+      성별·나이·지역별 분위는 통계 기반 추정값 / 참고용 수치
+    </div>
+  </div>
+</div>
+
+<script>
+// ══════════════════════════════════════════════
+// 백분위 기준표
+// ══════════════════════════════════════════════
+const PCT_ALL=[
+  {p:.1,v:114000},{p:1,v:21673},{p:5,v:13500},{p:10,v:10057},
+  {p:20,v:7624},{p:30,v:5900},{p:40,v:5000},{p:50,v:4272},
+  {p:60,v:3500},{p:70,v:2900},{p:80,v:2642},{p:90,v:2119},{p:100,v:0}
+];
+const PCT_G={
+  male:[{p:.1,v:130000},{p:1,v:26000},{p:5,v:16000},{p:10,v:12000},{p:20,v:9200},{p:30,v:7200},{p:40,v:6100},{p:50,v:5200},{p:60,v:4300},{p:70,v:3500},{p:80,v:3100},{p:90,v:2600},{p:100,v:0}],
+  female:[{p:.1,v:75000},{p:1,v:14000},{p:5,v:8500},{p:10,v:6400},{p:20,v:4700},{p:30,v:3700},{p:40,v:3000},{p:50,v:2650},{p:60,v:2150},{p:70,v:1850},{p:80,v:1650},{p:90,v:1350},{p:100,v:0}]
+};
+const PCT_A={
+  20:[{p:.1,v:80000},{p:1,v:12000},{p:5,v:7000},{p:10,v:5500},{p:20,v:4500},{p:30,v:3800},{p:40,v:3300},{p:50,v:2900},{p:60,v:2500},{p:70,v:2200},{p:80,v:1900},{p:90,v:1600},{p:100,v:0}],
+  30:[{p:.1,v:90000},{p:1,v:15000},{p:5,v:9000},{p:10,v:7000},{p:20,v:5500},{p:30,v:4600},{p:40,v:3950},{p:50,v:3400},{p:60,v:2900},{p:70,v:2500},{p:80,v:2200},{p:90,v:1900},{p:100,v:0}],
+  40:[{p:.1,v:110000},{p:1,v:18000},{p:5,v:11000},{p:10,v:8500},{p:20,v:6500},{p:30,v:5400},{p:40,v:4600},{p:50,v:3950},{p:60,v:3300},{p:70,v:2800},{p:80,v:2400},{p:90,v:2000},{p:100,v:0}],
+  50:[{p:.1,v:105000},{p:1,v:17000},{p:5,v:10500},{p:10,v:8000},{p:20,v:6200},{p:30,v:5100},{p:40,v:4300},{p:50,v:3700},{p:60,v:3100},{p:70,v:2600},{p:80,v:2200},{p:90,v:1800},{p:100,v:0}],
+  60:[{p:.1,v:70000},{p:1,v:10000},{p:5,v:5500},{p:10,v:4200},{p:20,v:3200},{p:30,v:2600},{p:40,v:2200},{p:50,v:1900},{p:60,v:1600},{p:70,v:1400},{p:80,v:1200},{p:90,v:1000},{p:100,v:0}]
+};
+const PCT_R={
+  수도권:[{p:.1,v:120000},{p:1,v:23000},{p:5,v:14500},{p:10,v:11000},{p:20,v:8500},{p:30,v:6600},{p:40,v:5600},{p:50,v:4800},{p:60,v:3900},{p:70,v:3200},{p:80,v:2800},{p:90,v:2300},{p:100,v:0}],
+  부산경남:[{p:.1,v:90000},{p:1,v:16000},{p:5,v:10000},{p:10,v:7800},{p:20,v:6000},{p:30,v:4800},{p:40,v:4100},{p:50,v:3500},{p:60,v:2900},{p:70,v:2400},{p:80,v:2100},{p:90,v:1750},{p:100,v:0}],
+  대구경북:[{p:.1,v:85000},{p:1,v:15000},{p:5,v:9500},{p:10,v:7400},{p:20,v:5700},{p:30,v:4500},{p:40,v:3850},{p:50,v:3300},{p:60,v:2750},{p:70,v:2300},{p:80,v:2000},{p:90,v:1650},{p:100,v:0}],
+  광주전라:[{p:.1,v:82000},{p:1,v:14500},{p:5,v:9000},{p:10,v:7000},{p:20,v:5400},{p:30,v:4300},{p:40,v:3650},{p:50,v:3100},{p:60,v:2600},{p:70,v:2200},{p:80,v:1900},{p:90,v:1580},{p:100,v:0}],
+  대전충청:[{p:.1,v:95000},{p:1,v:17000},{p:5,v:10500},{p:10,v:8100},{p:20,v:6300},{p:30,v:5000},{p:40,v:4250},{p:50,v:3650},{p:60,v:3000},{p:70,v:2500},{p:80,v:2150},{p:90,v:1800},{p:100,v:0}],
+  강원제주:[{p:.1,v:78000},{p:1,v:13500},{p:5,v:8200},{p:10,v:6400},{p:20,v:5000},{p:30,v:3950},{p:40,v:3350},{p:50,v:2850},{p:60,v:2400},{p:70,v:2050},{p:80,v:1780},{p:90,v:1480},{p:100,v:0}]
+};
+const REF={
+  전체:{avg:5482,med:4272},male:{avg:6648,med:5200},female:{avg:3252,med:2700},
+  age:{20:{avg:3791,med:3380},30:{avg:4550,med:4006},40:{avg:5405,med:4666},50:{avg:5150,med:4350},60:{avg:2916,med:2400}},
+  age_m:{20:{avg:3900,med:3500},30:{avg:5500,med:4900},40:{avg:6800,med:5900},50:{avg:6500,med:5500},60:{avg:3600,med:2900}},
+  age_f:{20:{avg:3500,med:3100},30:{avg:3400,med:3000},40:{avg:3800,med:3200},50:{avg:3500,med:2900},60:{avg:2000,med:1700}},
+  reg:{수도권:{avg:5200,med:4500},부산경남:{avg:3800,med:3200},대구경북:{avg:3600,med:3000},광주전라:{avg:3500,med:2900},대전충청:{avg:3900,med:3300},강원제주:{avg:3300,med:2800}},
+  reg_m:{수도권:{avg:6200,med:5400},부산경남:{avg:4600,med:3900},대구경북:{avg:4400,med:3700},광주전라:{avg:4200,med:3500},대전충청:{avg:4700,med:4000},강원제주:{avg:4000,med:3400}},
+  reg_f:{수도권:{avg:3800,med:3200},부산경남:{avg:2700,med:2300},대구경북:{avg:2600,med:2200},광주전라:{avg:2500,med:2100},대전충청:{avg:2800,med:2400},강원제주:{avg:2400,med:2000}}
+};
+
+// ══════════════════════════════════════════════
+// 캐릭터 반응 데이터
+// ══════════════════════════════════════════════
+const CHARS=[
+  {max:3, face:'🤑', name:'회계팀 막내 사원 김철수', reactions:[
+    {line:'"잠깐... 이게 실수령이 아니라 세전이죠...?"', sub:'당신의 연봉을 듣고 회계장부를 다시 확인하러 갔습니다. 본인 통장이랑 비교하며 자괴감에 빠져있습니다.'},
+    {line:'"저... 혹시 우리 회사 다니세요?"', sub:'같은 회사면 도저히 이해가 안 된다는 표정입니다. 이직을 심각하게 고려 중입니다.'}
+  ]},
+  {max:5, face:'😱', name:'팀장 박과장', reactions:[
+    {line:'"야, 너 연봉이 나보다 많다고?!"', sub:'10년 경력의 과장이 멘탈 붕괴 직전입니다. 오늘 야근은 본인이 자청했습니다.'},
+    {line:'"이 금액이면 팀장인 나랑... 비슷한데?"', sub:'표정 관리 실패. 회의실에서 혼자 심호흡 중입니다.'}
+  ]},
+  {max:10, face:'😮', name:'옆팀 대리 이수진', reactions:[
+    {line:'"오... 상위 10%면 진짜 잘 버시는 거 맞죠?"', sub:'연봉 계산기 돌려보고 본인이 더 충격받았습니다. 오늘 점심은 당신이 사줘야 할 것 같습니다.'},
+    {line:'"회사가 어디예요? 혹시 채용 공고 있나요?"', sub:'당신 연봉 듣고 이직 사이트 들어갔습니다. 적극적으로 레퍼럴을 요청할 기세입니다.'}
+  ]},
+  {max:20, face:'😏', name:'인사팀 최대리', reactions:[
+    {line:'"상위 20%면 나쁘지 않은데요~ 연봉협상 잘 하셨네요."', sub:'연봉 데이터를 가장 많이 보는 직군답게 의외로 담담합니다. "근데 저는요?" 라고 물어보려다 참았습니다.'},
+    {line:'"시장가 대비 적정 수준이에요. 근데 더 올릴 수도 있겠는데요?"', sub:'HR 전문가 모드 ON. 다음 연봉협상 전략을 짜주려 하고 있습니다.'}
+  ]},
+  {max:30, face:'🙂', name:'동기 정민준', reactions:[
+    {line:'"오 나랑 비슷하네~ 우리 같이 재테크 스터디 할까?"', sub:'평균 언저리 연봉에 위로 아닌 위로를 건넵니다. 본인도 연봉 올리고 싶어서 어제 유튜브를 3시간 봤습니다.'},
+    {line:'"그 정도면 적금은 얼마씩 넣어? 나는 월 30 하거든..."', sub:'연봉 자랑이 아니라 재테크 토크로 자연스럽게 넘어갑니다. 나름의 배려입니다.'}
+  ]},
+  {max:50, face:'😐', name:'부장님 한태식', reactions:[
+    {line:'"흠... 요즘 MZ들은 이 정도 받나?"', sub:'납득은 하지만 뭔가 찜찜한 표정입니다. 자신의 신입 시절 연봉을 떠올리며 씁쓸해하고 있습니다.'},
+    {line:'"요즘 물가가 올라서... 이 정도가 평균이야 이제."', sub:'시대가 변했음을 받아들이려는 중입니다. 근데 속으로는 좀 놀랐습니다.'}
+  ]},
+  {max:70, face:'😑', name:'카페 단골 손님 홍길동', reactions:[
+    {line:'"아... 저도 직장인인데, 요즘 많이 힘드시죠?"', sub:'공감 100%. 연봉 얘기에 자연스럽게 한숨을 함께 쉬어줍니다. 오늘 커피는 아메리카노 한 잔으로 버팁니다.'},
+    {line:'"그래도 직장 있는 것만으로도 감사한 거 아닐까요..."', sub:'위로인지 현실 직시인지 모를 한마디. 본인도 힘들어 보입니다.'}
+  ]},
+  {max:100, face:'🥲', name:'취준생 후배 김신입', reactions:[
+    {line:'"선배... 저 언제쯤 그 연봉 받을 수 있을까요?"', sub:'희망 가득한 눈빛과 현실의 간극이 느껴집니다. 당신이 그 눈빛을 보며 옛날 생각이 납니다.'},
+    {line:'"저도 열심히 하면 되죠...? 되죠...?"', sub:'자기 최면 중입니다. 당신은 어떻게 대답해야 할지 잠시 고민하게 됩니다.'}
+  ]}
+];
+
+// ══════════════════════════════════════════════
+// 자동차 추천 데이터
+// ══════════════════════════════════════════════
+const CARS=[
+  {max:2500, emoji:'🚲', name:'따릉이 (공유자전거)', price:'연 30,000원', badges:['친환경','절약의 왕','다이어트 효과'], reason:'현실적으로 가장 합리적인 선택입니다. 대중교통과 함께라면 최강의 조합. 연료비 걱정 제로.'},
+  {max:3500, emoji:'🛵', name:'전동킥보드 or 중고 경차', price:'100~500만원', badges:['실용주의','생존형 선택'], reason:'킥보드 공유 서비스 정기권도 좋고, 중고 경차도 나쁘지 않습니다. 지금은 차보다 저축이 먼저예요.'},
+  {max:4500, emoji:'🚗', name:'모닝 / 레이', price:'약 1,400~1,600만원', badges:['국민 경차','유지비 최저','주차 편함'], reason:'경차 혜택을 최대한 누리세요. 취득세 면제에 주차요금 50% 할인까지. 지금 이 차가 최선입니다.'},
+  {max:5500, emoji:'🚙', name:'아반떼 / 코나', price:'약 2,200~3,000만원', badges:['국민 세단','무난하고 안전'], reason:'대한민국 직장인의 대표 선택. 전국 주차장 어디서나 환영받는 차입니다. 민폐 없는 합리적인 선택.'},
+  {max:7000, emoji:'🚘', name:'쏘나타 / 투싼', price:'약 2,800~3,500만원', badges:['중형 입문','패밀리 지향'], reason:'슬슬 중형차 클래스로 올라설 때가 됐습니다. 고속도로에서 합류할 때 어깨가 좀 펴집니다.'},
+  {max:9000, emoji:'🏎️', name:'K8 / 그랜저', price:'약 3,800~5,000만원', badges:['대한민국 성공 지표','부장님 차'], reason:'그랜저는 한국에서 성공의 상징입니다. 이 연봉이면 탈 자격 있습니다. 주차장에서 한 번쯤 뒤돌아보게 됩니다.'},
+  {max:12000, emoji:'🚗', name:'제네시스 G80 / BMW 3시리즈', price:'약 5,500~7,000만원', badges:['프리미엄 입문','자기 보상'], reason:'이제 수입차 or 국산 프리미엄을 고민할 때입니다. 5년 열심히 일한 나에 대한 보상으로 충분합니다.'},
+  {max:18000, emoji:'🏅', name:'제네시스 GV80 / 벤츠 E클래스', price:'약 7,000~1억', badges:['상위 클래스','세금 폭격 예정'], reason:'차 값보다 자동차세, 보험료, 유지비가 더 무서운 구간입니다. 그래도 탈 수 있는 연봉이라는 게 중요합니다.'},
+  {max:999999, emoji:'💎', name:'포르쉐 / 벤츠 S클래스 이상', price:'1억 5천만원+', badges:['전설 등급','세금이 취미'], reason:'이 연봉이면 차가 문제가 아닙니다. 어떤 차를 살지보다 세금과 자산 배분을 더 고민해야 할 단계입니다.'}
+];
+
+// ══════════════════════════════════════════════
+// 티어 설정
+// ══════════════════════════════════════════════
+function getTier(p){
+  if(p<=1)  return {label:'💎 다이아몬드',color:'#60d4fc',xp:'#60d4fc',bg:'rgba(96,212,252,.12)',border:'rgba(96,212,252,.25)'};
+  if(p<=5)  return {label:'⚡ 플래티넘', color:'#c8f135',xp:'#c8f135',bg:'rgba(200,241,53,.12)', border:'rgba(200,241,53,.25)'};
+  if(p<=10) return {label:'🥇 골드',     color:'#f1a035',xp:'#f1a035',bg:'rgba(241,160,53,.12)', border:'rgba(241,160,53,.25)'};
+  if(p<=20) return {label:'🥈 실버',     color:'#b4b2a9',xp:'#b4b2a9',bg:'rgba(180,178,169,.12)',border:'rgba(180,178,169,.25)'};
+  if(p<=30) return {label:'🥉 브론즈',   color:'#cd7f32',xp:'#cd7f32',bg:'rgba(205,127,50,.12)', border:'rgba(205,127,50,.25)'};
+  if(p<=50) return {label:'📈 평균 이상',color:'#378ADD',xp:'#378ADD',bg:'rgba(55,138,221,.12)', border:'rgba(55,138,221,.25)'};
+  return          {label:'🌱 성장 중',   color:'#F0997B',xp:'#F0997B',bg:'rgba(240,153,123,.12)',border:'rgba(240,153,123,.25)'};
+}
+// RPG 티어 구간 (상위% 기준)
+const RPG=[
+  {cur:'🌱 성장 중',   next:'📈 평균 이상', minP:70, maxP:100, nextSal:4272},
+  {cur:'📈 평균 이상', next:'🥉 브론즈',    minP:50, maxP:70,  nextSal:5000},
+  {cur:'🥉 브론즈',   next:'🥈 실버',      minP:30, maxP:50,  nextSal:5900},
+  {cur:'🥈 실버',     next:'🥇 골드',      minP:20, maxP:30,  nextSal:7624},
+  {cur:'🥇 골드',     next:'⚡ 플래티넘',  minP:10, maxP:20,  nextSal:10057},
+  {cur:'⚡ 플래티넘', next:'💎 다이아몬드',minP:5,  maxP:10,  nextSal:13500},
+  {cur:'💎 다이아몬드',next:null,          minP:0,  maxP:5,   nextSal:null},
+];
+
+// ══════════════════════════════════════════════
+// 유틸
+// ══════════════════════════════════════════════
+const sliderEl=document.getElementById('slider');
+const salEl=document.getElementById('sal');
+sliderEl.oninput=()=>{salEl.value=sliderEl.value};
+salEl.oninput=()=>{const v=parseInt(salEl.value)||0;if(v>=1000&&v<=20000)sliderEl.value=v};
+
+function getRank(sal,pcts){
+  for(let i=0;i<pcts.length-1;i++){
+    const c=pcts[i],n=pcts[i+1];
+    if(sal>=c.v){const r=(sal-n.v)/(c.v-n.v);return Math.max(.1,Math.min(100,n.p+r*(c.p-n.p)));}
+  }
+  return 99;
+}
+function pStr(p){return p<1?'상위 '+p.toFixed(1)+'%':'상위 '+Math.round(p*10)/10+'%';}
+function fmt(n){return Math.round(n).toLocaleString()+'만';}
+function gH(my,ref){
+  const d=my-ref;
+  if(Math.abs(d)<60) return '<span class="eq">비슷</span>';
+  return d>0?`<span class="up">+${fmt(d)} 높음</span>`:`<span class="dn">${fmt(d)} 낮음</span>`;
+}
+function pick(arr){return arr[Math.floor(Math.random()*arr.length)];}
+
+// ══════════════════════════════════════════════
+// 메인 계산
+// ══════════════════════════════════════════════
+function calc(){
+  const sal=parseInt(salEl.value);
+  const gv=document.getElementById('g').value;
+  const av=document.getElementById('a').value;
+  const rv=document.getElementById('r').value;
+  if(!sal||sal<500){alert('연봉을 입력해주세요 (500만원 이상)');return;}
+
+  const gTxt={all:'전체',male:'남성',female:'여성'}[gv];
+  const aTxt={all:'전체',20:'20대',30:'30대',40:'40대',50:'50대',60:'60대 이상'}[av];
+  const rTxt=rv==='all'?'전국':rv;
+
+  // 기준별 백분위
+  const gPcts=gv==='all'?PCT_ALL:PCT_G[gv];
+  const rankList=[{key:'성별',pcts:gPcts}];
+  if(av!=='all') rankList.push({key:aTxt,pcts:PCT_A[parseInt(av)]});
+  if(rv!=='all') rankList.push({key:rTxt,pcts:PCT_R[rv]});
+  const vals=rankList.map(r=>getRank(sal,r.pcts));
+  const combined=vals.reduce((a,b)=>a+b,0)/vals.length;
+  const tier=getTier(combined);
+
+  // ① 스코프 뱃지
+  const chips=[];
+  if(gv!=='all') chips.push(gTxt);
+  if(av!=='all') chips.push(aTxt);
+  if(rv!=='all') chips.push(rTxt);
+  document.getElementById('scope-row').innerHTML=
+    (chips.length?chips:['전국 전체']).map(c=>`<span class="scope-chip">${c}</span>`).join('');
+
+  // ① 메인 퍼센트
+  document.getElementById('main-pct').textContent=pStr(combined);
+  document.getElementById('main-pct').style.color=tier.color;
+  const scopeStr=chips.length?chips.join(' · ')+' 근로자':'전국 전체 근로자';
+  document.getElementById('main-desc').innerHTML=`<strong>${scopeStr}</strong> 중<br>${pStr(combined)}에 해당해요`;
+  const pill=document.getElementById('tier-pill');
+  pill.textContent=tier.label;
+  pill.style.background=tier.bg; pill.style.color=tier.color; pill.style.border=`1px solid ${tier.border}`;
+
+  // ② 캐릭터 반응
+  const charGroup=CHARS.find(c=>combined<=c.max)||CHARS[CHARS.length-1];
+  const reaction=pick(charGroup.reactions);
+  document.getElementById('char-face').textContent=charGroup.face;
+  document.getElementById('char-name').textContent=charGroup.name;
+  document.getElementById('char-line').textContent=reaction.line;
+  document.getElementById('char-sub').textContent=reaction.sub;
+
+  // ③ 100명 시각화
+  const mePos=Math.max(1,Math.min(100,Math.round(combined)));
+  document.getElementById('crowd-sub').innerHTML=
+    `앞에서 <strong>${mePos}번째</strong> — 내 뒤로 ${100-mePos}명이 있어요`;
+  const cg=document.getElementById('crowd-grid');
+  cg.innerHTML='';
+  for(let i=1;i<=100;i++){
+    const d=document.createElement('div');
+    if(i===mePos) d.className='person me';
+    else if(i>mePos) d.className='person lower';
+    else d.className='person higher';
+    cg.appendChild(d);
+  }
+
+  // ④ RPG 레벨업
+  const rpgT=RPG.find(t=>combined>=t.minP&&combined<t.maxP)||RPG[RPG.length-1];
+  document.getElementById('rpg-cur').textContent='현재: '+rpgT.cur;
+  const xpFill=document.getElementById('xp-fill');
+  xpFill.style.background=tier.xp;
+  if(rpgT.next&&rpgT.nextSal){
+    const gap=rpgT.nextSal-sal;
+    const prevSal=RPG[RPG.indexOf(rpgT)+1]?.nextSal||0;
+    const range=rpgT.nextSal-prevSal;
+    const prog=Math.max(5,Math.min(98,Math.round(((sal-prevSal)/range)*100)));
+    document.getElementById('rpg-next').textContent='다음: '+rpgT.next;
+    document.getElementById('rpg-l1').textContent=rpgT.cur+' 시작';
+    document.getElementById('rpg-l2').textContent=rpgT.next+' 진입';
+    document.getElementById('rpg-msg').textContent=
+      gap>0
+        ? `다음 티어(${rpgT.next})까지 연봉 ${gap.toLocaleString()}만원 남았어요. 올해 연봉협상 때 꼭 챙기세요!`
+        : '이미 다음 티어 조건을 넘었어요!';
+    setTimeout(()=>{xpFill.style.width=prog+'%';},120);
+  } else {
+    document.getElementById('rpg-next').textContent='최고 티어!';
+    document.getElementById('rpg-l1').textContent='';
+    document.getElementById('rpg-l2').textContent='정상 👑';
+    document.getElementById('rpg-msg').textContent='더 올라갈 곳이 없습니다. 이미 최정상입니다 👑';
+    setTimeout(()=>{xpFill.style.width='100%';},120);
+  }
+
+  // ⑤ 자동차 추천
+  const car=CARS.find(c=>sal<=c.max)||CARS[CARS.length-1];
+  document.getElementById('car-emoji').textContent=car.emoji;
+  document.getElementById('car-name').textContent=car.name;
+  document.getElementById('car-price').textContent='가격대: '+car.price;
+  document.getElementById('car-badges').innerHTML=car.badges.map(b=>`<span class="car-badge">${b}</span>`).join('');
+  document.getElementById('car-reason').textContent=car.reason;
+
+  // ⑥ 기준별 4칸
+  const fg=document.getElementById('four-grid');
+  fg.innerHTML='';
+  const cards=[{label:'전국 전체',pcts:PCT_ALL,color:'#888780'}];
+  if(gv!=='all') cards.push({label:gTxt+' 기준',pcts:PCT_G[gv],color:gv==='male'?'#378ADD':'#D4537E'});
+  if(av!=='all') cards.push({label:aTxt+' 기준',pcts:PCT_A[parseInt(av)],color:'#1D9E75'});
+  if(rv!=='all') cards.push({label:rTxt+' 기준',pcts:PCT_R[rv],color:'#EF9F27'});
+  cards.slice(0,4).forEach(c=>{
+    const rk=getRank(sal,c.pcts);
+    const t=getTier(rk);
+    const d=document.createElement('div');
+    d.className='mini';
+    d.innerHTML=`<div class="mini-lbl">${c.label}</div>
+      <div class="mini-pct" style="color:${c.color}">${pStr(rk)}</div>
+      <div class="mini-sub">${t.label}</div>`;
+    fg.appendChild(d);
+  });
+
+  // ⑦ 바 차트
+  const chartPcts=rankList[rankList.length-1].pcts;
+  document.getElementById('chart-title').textContent='분위별 기준선 — '+rankList[rankList.length-1].key+' 기준';
+  const SHOW=[1,10,20,30,50,70,80];
+  const BL={1:'상위 1%',10:'상위 10%',20:'상위 20%',30:'상위 30%',50:'중위 50%',70:'하위 30%',80:'하위 20%'};
+  const bands=chartPcts.filter(x=>SHOW.includes(x.p));
+  const bc=document.getElementById('bar-chart');
+  bc.innerHTML='';
+  const maxA=Math.max(bands[0].v,sal);
+  bands.forEach(b=>{
+    const isA=sal>=b.v;
+    const pct=Math.round((b.v/maxA)*100);
+    const row=document.createElement('div');
+    row.className='bar-row';
+    row.innerHTML=`<div class="bar-lbl">${BL[b.p]}</div>
+      <div class="bar-track"><div class="bar-fill ref" data-w="${pct}%" style="width:0"></div></div>
+      <div class="bar-amt" style="color:${isA?'#378ADD':'#3a3a3a'}">${fmt(b.v)}</div>`;
+    bc.appendChild(row);
+  });
+  const myPct=Math.round((sal/maxA)*100);
+  const mr=document.createElement('div');
+  mr.className='bar-row';
+  mr.innerHTML=`<div class="bar-lbl" style="color:var(--text);font-weight:700">내 연봉</div>
+    <div class="bar-track"><div class="bar-fill me" data-w="${myPct}%" style="width:0"></div></div>
+    <div class="bar-amt" style="color:var(--text);font-weight:700">${fmt(sal)}</div>`;
+  bc.appendChild(mr);
+
+  // ⑧ 비교 테이블
+  const aKey=av==='all'?null:parseInt(av);
+  const aS=aKey?REF.age[aKey]:null;
+  const aSM=aKey?REF.age_m[aKey]:null;
+  const aSF=aKey?REF.age_f[aKey]:null;
+  const rS=rv!=='all'?REF.reg[rv]:null;
+  const rSM=rv!=='all'?REF.reg_m[rv]:null;
+  const rSF=rv!=='all'?REF.reg_f[rv]:null;
+  const R=`<div class="cmp-row"><span class="ck">전국 전체 중위</span><span class="ck" style="font-size:12px;margin-left:4px;color:var(--muted)">(${fmt(REF.전체.med)})</span><span class="cv">${gH(sal,REF.전체.med)}</span></div>`;
+  const RM=`<div class="cmp-row"><span class="ck">전국 남성 중위</span><span class="ck" style="font-size:12px;margin-left:4px;color:var(--muted)">(${fmt(REF.male.med)})</span><span class="cv">${gH(sal,REF.male.med)}</span></div>`;
+  const RF=`<div class="cmp-row"><span class="ck">전국 여성 중위</span><span class="ck" style="font-size:12px;margin-left:4px;color:var(--muted)">(${fmt(REF.female.med)})</span><span class="cv">${gH(sal,REF.female.med)}</span></div>`;
+  let rows = R + (gv==='female' ? RF : gv==='male' ? RM : '');
+  if(aS){
+    const aRef=gv==='male'?aSM:gv==='female'?aSF:aS;
+    rows+=`<div class="cmp-row"><span class="ck">${aTxt} ${gTxt} 중위</span><span class="ck" style="font-size:12px;margin-left:4px;color:var(--muted)">(${fmt(aRef.med)})</span><span class="cv">${gH(sal,aRef.med)}</span></div>`;
+  }
+  if(rS){
+    const rRef=gv==='male'?rSM:gv==='female'?rSF:rS;
+    rows+=`<div class="cmp-row"><span class="ck">${rTxt} ${gTxt} 중위</span><span class="ck" style="font-size:12px;margin-left:4px;color:var(--muted)">(${fmt(rRef.med)})</span><span class="cv">${gH(sal,rRef.med)}</span></div>`;
+  }
+  document.getElementById('cmp-table').innerHTML=rows;
+
+  // 전환
+  document.getElementById('input-section').style.display='none';
+  document.getElementById('result').style.display='block';
+  setTimeout(()=>{document.querySelectorAll('.bar-fill').forEach(el=>{el.style.width=el.dataset.w;});},100);
+}
+
+function resetForm(){
+  document.getElementById('input-section').style.display='block';
+  document.getElementById('result').style.display='none';
+}
+</script>
+</body>
+</html>
