@@ -686,13 +686,13 @@ function saveCard(){
   const FONT = '-apple-system, BlinkMacSystemFont, Arial, sans-serif';
 
   const palette = {
-    '💎 다이아몬드':{bg1:'#060d1f',bg2:'#0d2044',accent:'#60d4fc',glow:'rgba(96,212,252,0.18)'},
-    '⚡ 플래티넘':  {bg1:'#0a1200',bg2:'#162400',accent:'#c8f135',glow:'rgba(200,241,53,0.18)'},
-    '🥇 골드':      {bg1:'#1a0e00',bg2:'#2e1a00',accent:'#f1a035',glow:'rgba(241,160,53,0.18)'},
-    '🥈 실버':      {bg1:'#0e0e0e',bg2:'#1e1e1e',accent:'#c0bdb4',glow:'rgba(192,189,180,0.18)'},
-    '🥉 브론즈':    {bg1:'#140800',bg2:'#241200',accent:'#cd7f32',glow:'rgba(205,127,50,0.18)'},
-    '📈 평균 이상': {bg1:'#00091a',bg2:'#001530',accent:'#378ADD',glow:'rgba(55,138,221,0.18)'},
-    '🌱 성장 중':   {bg1:'#140800',bg2:'#201000',accent:'#F0997B',glow:'rgba(240,153,123,0.18)'},
+    '💎 다이아몬드':{bg1:'#0d1f3c',bg2:'#1a3560',accent:'#60d4fc',glow:'rgba(96,212,252,0.25)'},
+    '⚡ 플래티넘':  {bg1:'#142200',bg2:'#243d00',accent:'#c8f135',glow:'rgba(200,241,53,0.25)'},
+    '🥇 골드':      {bg1:'#2a1800',bg2:'#3d2600',accent:'#f1a035',glow:'rgba(241,160,53,0.25)'},
+    '🥈 실버':      {bg1:'#1c1c1c',bg2:'#2e2e2e',accent:'#c0bdb4',glow:'rgba(192,189,180,0.25)'},
+    '🥉 브론즈':    {bg1:'#221200',bg2:'#341c00',accent:'#cd7f32',glow:'rgba(205,127,50,0.25)'},
+    '📈 평균 이상': {bg1:'#001228',bg2:'#002244',accent:'#378ADD',glow:'rgba(55,138,221,0.25)'},
+    '🌱 성장 중':   {bg1:'#221200',bg2:'#301800',accent:'#F0997B',glow:'rgba(240,153,123,0.25)'},
   };
   const p = palette[tier.label] || palette['📈 평균 이상'];
   const emoji = tier.label.split(' ')[0];
@@ -766,20 +766,20 @@ function saveCard(){
   let iy = 580;
   items.forEach(item=>{
     // 행 배경
-    ctx.fillStyle = p.accent+'12';
+    ctx.fillStyle = p.accent+'18';
     roundRect(ctx, W*0.1, iy-28, W*0.8, 52, 10);
 
-    // 이모지
-    ctx.font='26px serif'; ctx.textAlign='left';
-    ctx.fillText(item.emoji, W*0.14, iy+6);
+    // 이모지 (텍스트로)
+    ctx.font='28px serif'; ctx.textAlign='center';
+    ctx.fillText(item.emoji, W*0.165, iy+7);
 
     // 라벨
-    ctx.fillStyle='#ffffff66'; ctx.font='18px '+FONT;
-    ctx.fillText(item.label, W*0.22, iy+6);
+    ctx.fillStyle='#ffffff88'; ctx.font='18px '+FONT; ctx.textAlign='left';
+    ctx.fillText(item.label, W*0.22, iy+7);
 
     // 값
     ctx.fillStyle=p.accent; ctx.font='bold 20px '+FONT; ctx.textAlign='right';
-    ctx.fillText(item.value, W*0.88, iy+6);
+    ctx.fillText(item.value, W*0.88, iy+7);
 
     ctx.textAlign='center';
     iy += 62;
