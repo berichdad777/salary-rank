@@ -671,7 +671,7 @@ function copyUrl(){
   alert('✅ URL이 복사됐어요!\n카카오톡에 붙여넣기 해보세요 😊');
 }
 
-// 결과 카드 이미지 저장 (시스템 폰트)
+// 결과 카드 이미지 저장 (다크 그라디언트)
 function saveCard(){
   const {sal, combined, tier, chips} = _shareData;
   if(!sal){ alert('먼저 연봉을 계산해주세요!'); return; }
@@ -685,76 +685,90 @@ function saveCard(){
   const scopeStr = chips.length ? chips.join(' · ') : '전국 전체';
   const FONT = '-apple-system, BlinkMacSystemFont, Arial, sans-serif';
 
-  const tierColor = {
-    '💎 다이아몬드':'#0C7BD4','⚡ 플래티넘':'#4A8C00','🥇 골드':'#C47800',
-    '🥈 실버':'#666660','🥉 브론즈':'#8B4513','📈 평균 이상':'#1A5FAB','🌱 성장 중':'#C05A30'
+  const palette = {
+    '💎 다이아몬드':{bg1:'#060d1f',bg2:'#0d2044',accent:'#60d4fc',glow:'rgba(96,212,252,0.18)'},
+    '⚡ 플래티넘':  {bg1:'#0a1200',bg2:'#162400',accent:'#c8f135',glow:'rgba(200,241,53,0.18)'},
+    '🥇 골드':      {bg1:'#1a0e00',bg2:'#2e1a00',accent:'#f1a035',glow:'rgba(241,160,53,0.18)'},
+    '🥈 실버':      {bg1:'#0e0e0e',bg2:'#1e1e1e',accent:'#c0bdb4',glow:'rgba(192,189,180,0.18)'},
+    '🥉 브론즈':    {bg1:'#140800',bg2:'#241200',accent:'#cd7f32',glow:'rgba(205,127,50,0.18)'},
+    '📈 평균 이상': {bg1:'#00091a',bg2:'#001530',accent:'#378ADD',glow:'rgba(55,138,221,0.18)'},
+    '🌱 성장 중':   {bg1:'#140800',bg2:'#201000',accent:'#F0997B',glow:'rgba(240,153,123,0.18)'},
   };
-  const accent = tierColor[tier.label] || '#1A5FAB';
-  const emoji  = tier.label.split(' ')[0];
-  const name   = tier.label.split(' ').slice(1).join(' ');
+  const p = palette[tier.label] || palette['📈 평균 이상'];
+  const emoji = tier.label.split(' ')[0];
+  const name  = tier.label.split(' ').slice(1).join(' ');
 
-  // 흰 배경
-  ctx.fillStyle='#FFFFFF'; ctx.fillRect(0,0,W,H);
+  // 다크 그라디언트 배경
+  const bgGrad = ctx.createLinearGradient(0,0,0,H);
+  bgGrad.addColorStop(0, p.bg1);
+  bgGrad.addColorStop(0.55, p.bg2);
+  bgGrad.addColorStop(1, p.bg1);
+  ctx.fillStyle = bgGrad; ctx.fillRect(0,0,W,H);
 
-  // 상단 바
-  ctx.fillStyle=accent; ctx.fillRect(0,0,W,10);
-
-  // 장식 원
-  ctx.beginPath(); ctx.arc(W/2,H*0.35,190,0,Math.PI*2);
-  ctx.fillStyle=accent+'12'; ctx.fill();
+  // 중앙 글로우
+  const glowG = ctx.createRadialGradient(W/2,H*0.36,0,W/2,H*0.36,270);
+  glowG.addColorStop(0, p.glow); glowG.addColorStop(1,'transparent');
+  ctx.fillStyle = glowG; ctx.fillRect(0,0,W,H);
 
   // 상단 라벨
-  ctx.fillStyle='#999990'; ctx.font='500 22px '+FONT; ctx.textAlign='center';
-  ctx.fillText('대한민국 연봉 랭킹', W/2, 85);
+  ctx.fillStyle = p.accent+'99'; ctx.font='500 20px '+FONT; ctx.textAlign='center';
+  ctx.fillText('대한민국 연봉 랭킹', W/2, 82);
 
-  // 이모지
-  ctx.font='88px serif'; ctx.fillText(emoji, W/2, 235);
+  // 이모지 (크게)
+  ctx.font='112px serif'; ctx.fillText(emoji, W/2, 252);
 
   // 티어 이름
-  ctx.fillStyle=accent; ctx.font='bold 40px '+FONT;
-  ctx.fillText(name+' 티어', W/2, 300);
+  ctx.fillStyle=p.accent; ctx.font='bold 44px '+FONT;
+  ctx.fillText(name+' 티어', W/2, 322);
 
-  // 구분선
-  ctx.strokeStyle='#E8E8E4'; ctx.lineWidth=1.5;
-  ctx.beginPath(); ctx.moveTo(W*.2,335); ctx.lineTo(W*.8,335); ctx.stroke();
+  // 그라디언트 구분선
+  const lg = ctx.createLinearGradient(W*.15,0,W*.85,0);
+  lg.addColorStop(0,'transparent'); lg.addColorStop(.5,p.accent+'66'); lg.addColorStop(1,'transparent');
+  ctx.strokeStyle=lg; ctx.lineWidth=1.5;
+  ctx.beginPath(); ctx.moveTo(W*.15,355); ctx.lineTo(W*.85,355); ctx.stroke();
 
-  // 백분위
-  ctx.fillStyle='#111111'; ctx.font='bold 82px '+FONT;
-  ctx.fillText(pct, W/2, 448);
+  // 백분위 (메인)
+  ctx.fillStyle='#ffffff'; ctx.font='bold 90px '+FONT;
+  ctx.fillText(pct, W/2, 468);
 
   // 연봉
-  ctx.fillStyle=accent; ctx.font='bold 32px '+FONT;
-  ctx.fillText(sal.toLocaleString()+'만원 (세전)', W/2, 505);
+  ctx.fillStyle=p.accent; ctx.font='bold 34px '+FONT;
+  ctx.fillText(sal.toLocaleString()+'만원 (세전)', W/2, 526);
 
   // 기준 칩
   const chipTxt = scopeStr+' 기준';
   ctx.font='500 20px '+FONT;
-  const chipW = ctx.measureText(chipTxt).width + 44;
-  ctx.fillStyle=accent+'18';
-  roundRect(ctx,(W-chipW)/2,530,chipW,42,21);
-  ctx.fillStyle=accent; ctx.fillText(chipTxt, W/2, 557);
+  const chipW = ctx.measureText(chipTxt).width+48;
+  ctx.fillStyle=p.accent+'22';
+  roundRect(ctx,(W-chipW)/2,548,chipW,44,22);
+  ctx.fillStyle=p.accent; ctx.fillText(chipTxt, W/2, 576);
 
   // 구분선
-  ctx.strokeStyle='#E8E8E4';
-  ctx.beginPath(); ctx.moveTo(W*.15,608); ctx.lineTo(W*.85,608); ctx.stroke();
+  ctx.strokeStyle=lg;
+  ctx.beginPath(); ctx.moveTo(W*.15,622); ctx.lineTo(W*.85,622); ctx.stroke();
 
   // 문구
-  ctx.fillStyle='#666660'; ctx.font='22px '+FONT;
-  ctx.fillText('나의 연봉 순위는 얼마일까?', W/2, 668);
+  ctx.fillStyle='#ffffff55'; ctx.font='22px '+FONT;
+  ctx.fillText('나의 연봉 순위는 얼마일까?', W/2, 680);
 
   // URL 박스
-  ctx.fillStyle='#F5F5F0'; roundRect(ctx,W*.12,692,W*.76,50,12);
-  ctx.fillStyle=accent; ctx.font='bold 21px '+FONT;
-  ctx.fillText('salary-rank-korea.netlify.app', W/2, 722);
+  ctx.fillStyle=p.accent+'1A';
+  roundRect(ctx,W*.12,703,W*.76,50,12);
+  ctx.strokeStyle=p.accent+'55'; ctx.lineWidth=1;
+  ctx.strokeRect(W*.12,703,W*.76,50);
+  ctx.fillStyle=p.accent; ctx.font='bold 21px '+FONT;
+  ctx.fillText('salary-rank-korea.netlify.app', W/2, 733);
 
   // 출처
-  ctx.fillStyle='#C8C8C4'; ctx.font='16px '+FONT;
-  ctx.fillText('국세청 2023년 통계 기반 / 참고용 수치', W/2, H-45);
+  ctx.fillStyle='#ffffff22'; ctx.font='15px '+FONT;
+  ctx.fillText('국세청 2023년 통계 기반 / 참고용 수치', W/2, H-48);
 
-  // 하단 바
-  ctx.fillStyle=accent; ctx.fillRect(0,H-10,W,10);
+  // 상하단 그라디언트 바
+  const barG = ctx.createLinearGradient(0,0,W,0);
+  barG.addColorStop(0,'transparent'); barG.addColorStop(.5,p.accent); barG.addColorStop(1,'transparent');
+  ctx.fillStyle=barG;
+  ctx.fillRect(0,0,W,4); ctx.fillRect(0,H-4,W,4);
 
-  // 저장
   const link = document.createElement('a');
   link.download = '내연봉랭킹_'+name+'_'+pct.replace(/\s/g,'')+'.png';
   link.href = canvas.toDataURL('image/png');
