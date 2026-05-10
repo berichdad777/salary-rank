@@ -743,78 +743,91 @@ function saveCard(){
   ctx.strokeStyle=lg;
   ctx.beginPath(); ctx.moveTo(W*.15,535); ctx.lineTo(W*.85,535); ctx.stroke();
 
+  // 이모지를 Canvas에 컬러로 그리는 함수
+  function drawEmoji(ctx, emoji, x, y, size){
+    return new Promise(resolve=>{
+      const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="${size}" height="${size}"><text y="${size*0.85}" font-size="${size*0.9}" font-family="Apple Color Emoji,Segoe UI Emoji,Noto Color Emoji,serif">${emoji}</text></svg>`;
+      const blob = new Blob([svg],{type:'image/svg+xml'});
+      const url = URL.createObjectURL(blob);
+      const img = new Image();
+      img.onload=()=>{ ctx.drawImage(img,x,y,size,size); URL.revokeObjectURL(url); resolve(); };
+      img.onerror=()=>{ ctx.font=size+'px serif'; ctx.fillStyle='#fff'; ctx.textAlign='left'; ctx.fillText(emoji,x,y+size*0.85); resolve(); };
+      img.src=url;
+    });
+  }
+
   // 재미 요소 계산
   const salWon = sal * 10000;
   const chicken   = Math.floor(salWon / 22000).toLocaleString();
   const starbucks = Math.floor(salWon / 4500).toLocaleString();
   const CARS_CARD = [
-    {max:2500,'car':'따릉이 🚲'},{max:3500,'car':'전동킥보드 🛵'},
-    {max:4500,'car':'모닝 🚗'},{max:5500,'car':'아반떼 🚙'},
-    {max:7000,'car':'쏘나타 🚘'},{max:9000,'car':'그랜저 🏎️'},
-    {max:12000,'car':'제네시스 G80 🚗'},{max:18000,'car':'벤츠 E클래스 🏅'},
-    {max:999999,'car':'포르쉐 💎'}
+    {max:2500,car:'따릉이'},{max:3500,car:'전동킥보드'},
+    {max:4500,car:'모닝'},{max:5500,car:'아반떼'},
+    {max:7000,car:'쏘나타'},{max:9000,car:'그랜저'},
+    {max:12000,car:'제네시스 G80'},{max:18000,car:'벤츠 E클래스'},
+    {max:999999,car:'포르쉐'}
   ];
   const carName = (CARS_CARD.find(c=>sal<=c.max)||CARS_CARD[CARS_CARD.length-1]).car;
 
-  // 재미 요소 3줄
   const items = [
-    {emoji:'🍗', label:'치킨', value:chicken+'마리'},
+    {emoji:'🍗', label:'치킨',     value:chicken+'마리'},
     {emoji:'☕', label:'스타벅스', value:starbucks+'잔'},
-    {emoji:'🚗', label:'추천 차량', value:carName},
+    {emoji:'🚗', label:'추천 차량',value:carName},
   ];
 
-  let iy = 580;
-  items.forEach(item=>{
-    // 행 배경
-    ctx.fillStyle = p.accent+'18';
-    roundRect(ctx, W*0.1, iy-28, W*0.8, 52, 10);
+  // 재미 요소 + URL 박스를 이모지 로딩 후 그리기
+  const drawItems = async ()=>{
+    let iy = 580;
+    for(const item of items){
+      ctx.fillStyle='rgba(255,255,255,0.07)';
+      roundRect(ctx, W*0.1, iy-30, W*0.8, 54, 10);
 
-    // 이모지 (텍스트로)
-    ctx.font='28px serif'; ctx.textAlign='center';
-    ctx.fillText(item.emoji, W*0.165, iy+7);
+      await drawEmoji(ctx, item.emoji, W*0.13, iy-22, 38);
 
-    // 라벨
-    ctx.fillStyle='#ffffff88'; ctx.font='18px '+FONT; ctx.textAlign='left';
-    ctx.fillText(item.label, W*0.22, iy+7);
+      ctx.fillStyle='#ffffff88'; ctx.font='19px '+FONT; ctx.textAlign='left';
+      ctx.fillText(item.label, W*0.13+46, iy+5);
 
-    // 값
-    ctx.fillStyle=p.accent; ctx.font='bold 20px '+FONT; ctx.textAlign='right';
-    ctx.fillText(item.value, W*0.88, iy+7);
+      ctx.fillStyle='#ffffff'; ctx.font='bold 22px '+FONT; ctx.textAlign='right';
+      ctx.fillText(item.value, W*0.88, iy+5);
 
-    ctx.textAlign='center';
-    iy += 62;
-  });
+      ctx.textAlign='center';
+      iy += 64;
+    }
 
-  // 구분선
-  ctx.strokeStyle=lg;
-  ctx.beginPath(); ctx.moveTo(W*.15,iy+5); ctx.lineTo(W*.85,iy+5); ctx.stroke();
+    // 구분선
+    ctx.strokeStyle=lg;
+    ctx.beginPath(); ctx.moveTo(W*.15,iy+5); ctx.lineTo(W*.85,iy+5); ctx.stroke();
 
-  // 문구
-  ctx.fillStyle='#ffffff55'; ctx.font='20px '+FONT; ctx.textAlign='center';
-  ctx.fillText('나의 연봉 순위는 얼마일까?', W/2, iy+45);
+    // 문구
+    ctx.fillStyle='#ffffff55'; ctx.font='20px '+FONT; ctx.textAlign='center';
+    ctx.fillText('나의 연봉 순위는 얼마일까?', W/2, iy+45);
 
-  // URL 박스
-  ctx.fillStyle=p.accent+'1A';
-  roundRect(ctx,W*.12,iy+60,W*.76,48,12);
-  ctx.strokeStyle=p.accent+'55'; ctx.lineWidth=1;
-  ctx.strokeRect(W*.12,iy+60,W*.76,48);
-  ctx.fillStyle=p.accent; ctx.font='bold 20px '+FONT;
-  ctx.fillText('salary-rank-korea.netlify.app', W/2, iy+89);
+    // URL 박스
+    ctx.fillStyle=p.accent+'1A';
+    roundRect(ctx,W*.12,iy+60,W*.76,48,12);
+    ctx.strokeStyle=p.accent+'55'; ctx.lineWidth=1;
+    ctx.strokeRect(W*.12,iy+60,W*.76,48);
+    ctx.fillStyle=p.accent; ctx.font='bold 20px '+FONT;
+    ctx.fillText('salary-rank-korea.netlify.app', W/2, iy+89);
 
-  // 출처
-  ctx.fillStyle='#ffffff22'; ctx.font='15px '+FONT;
-  ctx.fillText('국세청 2023년 통계 기반 / 참고용 수치', W/2, H-48);
+    // 출처
+    ctx.fillStyle='#ffffff22'; ctx.font='15px '+FONT;
+    ctx.fillText('국세청 2023년 통계 기반 / 참고용 수치', W/2, H-48);
 
-  // 상하단 그라디언트 바
-  const barG = ctx.createLinearGradient(0,0,W,0);
-  barG.addColorStop(0,'transparent'); barG.addColorStop(.5,p.accent); barG.addColorStop(1,'transparent');
-  ctx.fillStyle=barG;
-  ctx.fillRect(0,0,W,4); ctx.fillRect(0,H-4,W,4);
+    // 상하단 바
+    const barG = ctx.createLinearGradient(0,0,W,0);
+    barG.addColorStop(0,'transparent'); barG.addColorStop(.5,p.accent); barG.addColorStop(1,'transparent');
+    ctx.fillStyle=barG;
+    ctx.fillRect(0,0,W,4); ctx.fillRect(0,H-4,W,4);
 
-  const link = document.createElement('a');
-  link.download = '내연봉랭킹_'+name+'_'+pct.replace(/\s/g,'')+'.png';
-  link.href = canvas.toDataURL('image/png');
-  link.click();
+    // 저장
+    const link = document.createElement('a');
+    link.download = '내연봉랭킹_'+name+'_'+pct.replace(/\s/g,'')+'.png';
+    link.href = canvas.toDataURL('image/png');
+    link.click();
+  };
+
+  drawItems();
 }
 
 function roundRect(ctx, x, y, w, h, r){
