@@ -729,35 +729,77 @@ function saveCard(){
 
   // 백분위 (메인)
   ctx.fillStyle='#ffffff'; ctx.font='bold 90px '+FONT;
-  ctx.fillText(pct, W/2, 468);
-
-  // 연봉
-  ctx.fillStyle=p.accent; ctx.font='bold 34px '+FONT;
-  ctx.fillText(sal.toLocaleString()+'만원 (세전)', W/2, 526);
+  ctx.fillText(pct, W/2, 450);
 
   // 기준 칩
   const chipTxt = scopeStr+' 기준';
   ctx.font='500 20px '+FONT;
   const chipW = ctx.measureText(chipTxt).width+48;
   ctx.fillStyle=p.accent+'22';
-  roundRect(ctx,(W-chipW)/2,548,chipW,44,22);
-  ctx.fillStyle=p.accent; ctx.fillText(chipTxt, W/2, 576);
+  roundRect(ctx,(W-chipW)/2,468,chipW,40,20);
+  ctx.fillStyle=p.accent; ctx.fillText(chipTxt, W/2, 493);
 
   // 구분선
   ctx.strokeStyle=lg;
-  ctx.beginPath(); ctx.moveTo(W*.15,622); ctx.lineTo(W*.85,622); ctx.stroke();
+  ctx.beginPath(); ctx.moveTo(W*.15,535); ctx.lineTo(W*.85,535); ctx.stroke();
+
+  // 재미 요소 계산
+  const salWon = sal * 10000;
+  const chicken   = Math.floor(salWon / 22000).toLocaleString();
+  const starbucks = Math.floor(salWon / 4500).toLocaleString();
+  const CARS_CARD = [
+    {max:2500,'car':'따릉이 🚲'},{max:3500,'car':'전동킥보드 🛵'},
+    {max:4500,'car':'모닝 🚗'},{max:5500,'car':'아반떼 🚙'},
+    {max:7000,'car':'쏘나타 🚘'},{max:9000,'car':'그랜저 🏎️'},
+    {max:12000,'car':'제네시스 G80 🚗'},{max:18000,'car':'벤츠 E클래스 🏅'},
+    {max:999999,'car':'포르쉐 💎'}
+  ];
+  const carName = (CARS_CARD.find(c=>sal<=c.max)||CARS_CARD[CARS_CARD.length-1]).car;
+
+  // 재미 요소 3줄
+  const items = [
+    {emoji:'🍗', label:'치킨', value:chicken+'마리'},
+    {emoji:'☕', label:'스타벅스', value:starbucks+'잔'},
+    {emoji:'🚗', label:'추천 차량', value:carName},
+  ];
+
+  let iy = 580;
+  items.forEach(item=>{
+    // 행 배경
+    ctx.fillStyle = p.accent+'12';
+    roundRect(ctx, W*0.1, iy-28, W*0.8, 52, 10);
+
+    // 이모지
+    ctx.font='26px serif'; ctx.textAlign='left';
+    ctx.fillText(item.emoji, W*0.14, iy+6);
+
+    // 라벨
+    ctx.fillStyle='#ffffff66'; ctx.font='18px '+FONT;
+    ctx.fillText(item.label, W*0.22, iy+6);
+
+    // 값
+    ctx.fillStyle=p.accent; ctx.font='bold 20px '+FONT; ctx.textAlign='right';
+    ctx.fillText(item.value, W*0.88, iy+6);
+
+    ctx.textAlign='center';
+    iy += 62;
+  });
+
+  // 구분선
+  ctx.strokeStyle=lg;
+  ctx.beginPath(); ctx.moveTo(W*.15,iy+5); ctx.lineTo(W*.85,iy+5); ctx.stroke();
 
   // 문구
-  ctx.fillStyle='#ffffff55'; ctx.font='22px '+FONT;
-  ctx.fillText('나의 연봉 순위는 얼마일까?', W/2, 680);
+  ctx.fillStyle='#ffffff55'; ctx.font='20px '+FONT; ctx.textAlign='center';
+  ctx.fillText('나의 연봉 순위는 얼마일까?', W/2, iy+45);
 
   // URL 박스
   ctx.fillStyle=p.accent+'1A';
-  roundRect(ctx,W*.12,703,W*.76,50,12);
+  roundRect(ctx,W*.12,iy+60,W*.76,48,12);
   ctx.strokeStyle=p.accent+'55'; ctx.lineWidth=1;
-  ctx.strokeRect(W*.12,703,W*.76,50);
-  ctx.fillStyle=p.accent; ctx.font='bold 21px '+FONT;
-  ctx.fillText('salary-rank-korea.netlify.app', W/2, 733);
+  ctx.strokeRect(W*.12,iy+60,W*.76,48);
+  ctx.fillStyle=p.accent; ctx.font='bold 20px '+FONT;
+  ctx.fillText('salary-rank-korea.netlify.app', W/2, iy+89);
 
   // 출처
   ctx.fillStyle='#ffffff22'; ctx.font='15px '+FONT;
